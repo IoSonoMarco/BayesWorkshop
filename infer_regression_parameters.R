@@ -23,6 +23,10 @@ data_linear = list(x = standardize(d$x),
                    y = standardize(d$y), 
                    N = nrow(d))
 
+data_linear = list(x = d$x, 
+                   y = d$y, 
+                   N = nrow(d))
+
 ### Sample from models
 fit_linear = sampling(model_linear, data = data_linear, chains=3, warmup=800, iter=3000)
 
@@ -33,7 +37,6 @@ mcmc_pairs(fit_linear, pars=c('beta0','beta1'), diag_fun='dens')
 
 draws <- as.matrix(fit_linear)
 mcmc_areas(draws, pars=c('beta1'), prob=0.95)
-
 
 #################
 ### quadratic ###
@@ -58,6 +61,8 @@ mcmc_pairs(fit_quadratic, pars=c('beta0','beta1','beta2'), diag_fun='dens')
 
 draws <- as.matrix(fit_quadratic)
 mcmc_areas(draws, pars=c('beta1', 'beta2'), prob=0.95)
+
+mcmc_acf_bar(draws, pars=c('beta0','beta1','beta2'))
 
 ### Posterior predictive model comparison
 

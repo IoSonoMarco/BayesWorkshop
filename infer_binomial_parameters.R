@@ -3,7 +3,7 @@ library(bayesplot)
 
 # make data
 Y <- c(1, 3)
-N <- c(29, 7) # plug 10 instead of 29
+N <- c(29+1, 7+3) # plug 10 instead of 29
 
 ### Compile model
 model <- stan_model('models/model_binomial.stan')
@@ -25,6 +25,35 @@ abline(v=data$y1/data$N1, col='red')
 plot(density(theta2))
 abline(v=data$y2/data$N2, col='red')
 
+theta_diff <- draws$theta_diff
+plot(density(theta_diff))
+
 # Inspect bivariate posteriors
 mcmc_pairs(fit, pars=c("theta1", "theta2"), diag_fun="dens")
 mcmc_areas(fit, pars=c('theta1', 'theta2', 'theta_diff'), prob = 0.95)
+
+mcmc_acf_bar(fit, pars=c('theta1', 'theta2'))
+
+mcmc_trace(fit, pars=c("theta1", "theta2"))
+
+
+
+### sim ###
+
+draws <- extract(fit)
+sim1 <- draws$sim1
+sim2 <- draws$sim2
+
+hist(sim1)
+abline(v=1, col='red')
+
+barplot(table(sim1))
+
+barplot(table(sim2))
+
+sim_diff <- sim1 - sim2
+hist(sim_diff)
+
+quantile(theta_diff, c(0.025, 0.975))
+quantile(sim_diff, c(0.025, 0.975))
+

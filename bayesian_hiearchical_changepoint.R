@@ -3,13 +3,13 @@ library(dplyr)
 library(brms)
 library(ggplot2)
 library(tidybayes)
-library(modelr)
+library(modelr) 
 library(ggdist)
 library(bridgesampling)
 library(loo)
 
-# load('fits/bayesian_hierarchical_changepoint_loos.Rda')
-# load('fits/bayesian_hierarchical_changepoint_models.Rda')
+load('fits/bayesian_hierarchical_changepoint_loos.Rda')
+load('fits/bayesian_hierarchical_changepoint_models.Rda')
 
 ### load and visualize data ###
 data <- read.csv('datasets/CP.csv')
@@ -17,6 +17,8 @@ data <- read.csv('datasets/CP.csv')
 ggplot(data, aes(x=Numerosity, y=RT, group=Subj)) +
   geom_point() 
 
+# b1: pre-inflection slope
+# b2: post-inflection slope
 bform <- brms::bf( # explicit brms dependencies (bf is also a function of bridgesampling)
   RT ~ b0 + b1 * (Numerosity - 5) * step(5 - Numerosity) + b2 * (Numerosity - 5) * step(Numerosity - 5),
   b0 + b1 + b2 ~ 1 + (1|Subj),
@@ -127,7 +129,8 @@ ggplot(post_pred, aes(x=Numerosity, y=post_mean_RT, group=Subj, color=Group)) +
 contr <- c('pre-slope G vs pre-slope A' = 'b1_GroupG = 0',
            'post-slope G vs post-slope A' = 'b2_GroupG = 0',
            'pre-slope A vs post-slope A' = 'b2_Intercept - b1_Intercept = 0',
-           'pre-slope G vs post-slope G' = '(b2_Intercept + b2_GroupG) - (b1_Intercept + b1_GroupG) = 0')
+           'pre-slope G vs post-slope G' = '(b2_Intercept + b2_GroupG) - (b1_Intercept + b1_GroupG) = 0',
+           'diff A - B' = '((b2_Intercept + b2_GroupG) - (b1_Intercept + b1_GroupG)) = (b2_Intercept - b1_Intercept)')
 h <- hypothesis(m_cp4, contr)
 plot(h)[[1]] + geom_vline(xintercept = 0, col='red', linetype='dashed')
 

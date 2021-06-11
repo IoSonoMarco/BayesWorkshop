@@ -4,11 +4,11 @@ library(ggplot2)
 library(emmeans)
 
 ### load and visualize data ###
-data <- read.csv('datasets/3FactRT.csv') %>%
-  mutate(Polarity=factor(Polarity), Truth_Value=factor(Truth_Value), Numerosity=factor(Numerosity), Subj_ID=factor(Subj_ID))
+data <- read.csv('datasets/3FactRT.csv') 
 
 # reduce sample size for didactic purpose #
-data <- data[data$Subj_ID %in% seq(1,5),]
+data <- data[data$Subj_ID %in% seq(1,5),] %>%
+  mutate(Polarity=factor(Polarity), Truth_Value=factor(Truth_Value), Numerosity=factor(Numerosity), Subj_ID=factor(Subj_ID))
 
 # plot data group-level #
 ggplot(data, aes(x=RT, col=Numerosity, fill=Numerosity)) +
@@ -29,14 +29,22 @@ ggplot(data, aes(x=RT_log, col=Numerosity, fill=Numerosity)) +
   facet_grid(Polarity ~ Truth_Value, labeller = label_both) +
   geom_density(alpha=0.2) 
 
+#
+get_prior(RT_log ~ Truth_Value*Numerosity + Polarity + (1|Subj_ID), data)
+# 
+
 ### specify priors ###
 priors <- prior(normal(0,100), class = "b") +
           prior(normal(0,100), class='Intercept')
 
 ### fit the model ###
 m <- brm(RT_log ~ Truth_Value*Numerosity + Polarity + (1|Subj_ID), prior = priors,
-         data = data, iter = 4500, warmup = 500, chains = 4, core = 4, 
+         data = data, iter = 4000, warmup = 500, chains = 3, core = 3, 
          sample_prior = TRUE, control=list(adapt_delta=0.95))
+
+#
+prior_summary(m)
+#
 
 print(m)
 
@@ -61,7 +69,7 @@ draws_True_Min <- fe_draws[, 'b_Intercept'] + fe_draws[, 'b_Truth_ValueTrue'] + 
 plot(density(draws_True_Mag), main='Posteriors', xlab='coeff')
 lines(density(draws_True_Min), col='red')
 # compute contrast #
-contr_True_Mag_vs_Min <- draws_True_Mag - draws_True_Min
+contr_True_Mag_vs_Min <- draws_True_Mag - draTrue_Mws_in
 plot(density(contr_True_Mag_vs_Min))
 median(contr_True_Mag_vs_Min)
 emm$contrasts # compare
@@ -72,3 +80,12 @@ H <- hypothesis(m, c(contr))
 plot(H)[[1]] + xlim(-1,1)
 
 
+
+h1 <- hypothesis(m, 'Truth_ValueTrue = 0')
+plot(h1)[[1]] + xlim(-1,1)
+
+h2 <- hypothesis(m, 'PolarityNEG = 0')
+plot(h2)[[1]] + xlim(-1,1)
+
+hh <- hypothesis(m, c('Truth_ValueTrue = 0',
+                      'PolarityNEG = 0'))

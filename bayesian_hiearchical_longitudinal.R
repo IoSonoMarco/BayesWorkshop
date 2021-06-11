@@ -7,17 +7,16 @@ library(bridgesampling)
 library(tidybayes)
 library(bayestestR)
 
-#load('fits/bayesian_hierarchical_longitudinal_m1.Rda')
-#load('fits/bayesian_hierarchical_longitudinal_m2.Rda')
-#load('fits/bayesian_hierarchical_longitudinal_m3.Rda')
-#load('fits/bayesian_hierarchical_longitudinal_m4.Rda')
+load('fits/bayesian_hierarchical_longitudinal_m1.Rda')
+load('fits/bayesian_hierarchical_longitudinal_m2.Rda')
+load('fits/bayesian_hierarchical_longitudinal_m3.Rda')
+load('fits/bayesian_hierarchical_longitudinal_m4.Rda')
 
 ### load and visualize data ###
 data <- read.csv('datasets/IGT_Block.csv') %>%
   mutate(Subj=factor(Subj), Good_prop = Good/Total, Block=Block-1) %>%
   filter(Condition != '1') %>%
   mutate(Condition=factor(Condition))
-  
 
 data_stats <- ddply(data, .(Condition, Block), summarize, mean_prop=mean(Good_prop), se=sd(Good_prop)/sqrt(length(Good_prop)))
 
@@ -59,9 +58,9 @@ m2 <- brm(Good|trials(Total) ~ Block*Condition + (1 + Block|Subj),
           save_pars=save_pars(all = TRUE))
 
 ### compare m1 and m2 via Bayes Factor ###
-bridge <- bridge_sampler(m1)
+bridge <- bridge_sampler(m1) # p(D|m1)
 
-bridge2 <- bridge_sampler(m2)
+bridge2 <- bridge_sampler(m2) # p(D|m2)
 
 bf(bridge2, bridge)
 
@@ -102,7 +101,7 @@ print(m4)
 
 conditional_effects(m4)
 
-data$pred_m4 <- fitted(m4, scale = 'response') #, re_formula = NA)
+data$pred_m4 <- fitted(m4, scale = 'response', re_formula = NA)
 
 ggplot(data, aes(x=Block, y=pred_m4[,'Estimate'], group=Condition, color=Condition)) +
   geom_pointrange(aes(ymin=pred_m4[,'Q2.5'], ymax=pred_m4[,'Q97.5']), position = position_dodge(width = 0.2)) +
