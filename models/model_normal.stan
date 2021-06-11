@@ -19,3 +19,10 @@ model {
   x ~ normal(mu, sigma);
 }
 
+generated quantities {
+  real sim;
+  sim = normal_rng(mu, sigma);
+}
+
+
+

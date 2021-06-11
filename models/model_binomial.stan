@@ -22,3 +22,10 @@ model {
   theta2 ~ beta(1,1);
 }
 
+generated quantities {
+  real sim1;
+  real sim2;
+  sim1 = binomial_rng(N1, theta1);
+  sim2 = binomial_rng(N2, theta2);
+}
+
